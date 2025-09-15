@@ -3,7 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "CI= expo start",
+    "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "CI= expo start --android",
     "ios": "CI= expo start --ios",
@@ -47,6 +47,7 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.1.0",
+    "cross-env": "^10.0.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
     "typescript": "~5.8.3"

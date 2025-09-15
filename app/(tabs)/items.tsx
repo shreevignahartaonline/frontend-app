@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  ActivityIndicator,
 } from 'react-native';
 import Modal from 'react-native-modal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -50,6 +51,7 @@ export default function ItemsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<'Primary' | 'Kirana'>('Primary');
+  const [loadingItems, setLoadingItems] = useState(false);
   
   // Form states
   const [itemForm, setItemForm] = useState({
@@ -79,6 +81,7 @@ export default function ItemsScreen() {
 
   const loadItems = async () => {
     try {
+      setLoadingItems(true);
       const itemsData = await ItemsApiService.getItems();
       setItems(itemsData);
       
@@ -91,6 +94,8 @@ export default function ItemsScreen() {
     } catch (error) {
       console.error('Error loading items:', error);
       Alert.alert('Error', handleApiError(error));
+    } finally {
+      setLoadingItems(false);
     }
   };
 
@@ -641,7 +646,12 @@ export default function ItemsScreen() {
         {/* Items List */}
         <View style={styles.listContainer}>
           <Text style={styles.sectionTitle}>Products ({filteredItems.filter(item => !item.isUniversal).length})</Text>
-          {filteredItems.filter(item => !item.isUniversal).length > 0 ? (
+          {loadingItems ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={styles.loadingText}>Loading Items...</Text>
+            </View>
+          ) : filteredItems.filter(item => !item.isUniversal).length > 0 ? (
             <FlatList
               data={filteredItems.filter(item => !item.isUniversal)}
               renderItem={renderItem}
@@ -1213,6 +1223,15 @@ const styles = StyleSheet.create({
       color: Colors.error,
       marginLeft: 6,
       fontWeight: '500',
+    },
+    loadingContainer: {
+      alignItems: 'center',
+      paddingVertical: 60,
+    },
+    loadingText: {
+      fontSize: 16,
+      color: Colors.textSecondary,
+      marginTop: 16,
     },
 
   });

@@ -16,7 +16,8 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View
+  View,
+  ActivityIndicator
 } from 'react-native';
 import Modal from 'react-native-modal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -103,6 +104,8 @@ export default function DashboardScreen() {
   const [companyDetails, setCompanyDetails] = useState<{ businessName: string } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [loadingParties, setLoadingParties] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -110,25 +113,7 @@ export default function DashboardScreen() {
     loadCompanyDetails();
   }, []);
 
-  // Refresh data when screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      loadDashboardData();
-      loadUnifiedParties();
-      loadCompanyDetails();
-    }, [])
-  );
 
-  // Monitor for transaction updates and refresh party balances
-  useEffect(() => {
-    // Reload all data periodically to reflect any changes
-    const interval = setInterval(() => {
-      loadDashboardData();
-      loadUnifiedParties();
-    }, 10000); // Check every 10 seconds for better performance
-    
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     filterTransactions();
@@ -142,6 +127,7 @@ export default function DashboardScreen() {
 
   const loadDashboardData = async () => {
     try {
+      setLoadingTransactions(true);
       // Load sales invoices from API
       const salesInvoices = await SaleApiService.getSales();
       const salesPayments = await PaymentApiService.getPayments({ type: 'payment-in' });
@@ -270,6 +256,8 @@ export default function DashboardScreen() {
       setLastRefreshTime(new Date());
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoadingTransactions(false);
     }
   };
 
@@ -322,6 +310,7 @@ export default function DashboardScreen() {
 
   const loadUnifiedParties = async () => {
     try {
+      setLoadingParties(true);
       // Use PartyManager to get parties with calculated balances
       const partiesWithBalances = await PartyManager.getPartiesWithBalances();
       
@@ -335,6 +324,8 @@ export default function DashboardScreen() {
       setUnifiedParties(partiesWithNetBalance);
     } catch (error) {
       console.error('Error loading unified parties:', error);
+    } finally {
+      setLoadingParties(false);
     }
   };
 
@@ -1060,7 +1051,12 @@ export default function DashboardScreen() {
       {/* Transactions Tab Content */}
       {activeTab === 'transactions' && (
         <View style={styles.transactionsContainer}>
-          {filteredTransactions.length > 0 ? (
+          {loadingTransactions ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={styles.loadingText}>Loading Transactions...</Text>
+            </View>
+          ) : filteredTransactions.length > 0 ? (
             <FlatList
               data={filteredTransactions.slice(0, 20)} // Show last 20 transactions
               renderItem={({ item }) => <TransactionItem transaction={item} />}
@@ -1093,7 +1089,12 @@ export default function DashboardScreen() {
           </View>
           
           <View style={styles.transactionsContainer}>
-            {getFilteredParties().length > 0 ? (
+            {loadingParties ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Loading Parties...</Text>
+              </View>
+            ) : getFilteredParties().length > 0 ? (
               <FlatList
                 data={getFilteredParties()}
                 renderItem={({ item }) => <PartyItem party={item} />}
@@ -1750,5 +1751,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     marginTop: 2,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    marginTop: 16,
   },
 });

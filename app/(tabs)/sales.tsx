@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  ActivityIndicator,
 } from 'react-native';
 import Modal from 'react-native-modal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -90,6 +91,7 @@ export default function SalesScreen() {
   
   // Customer balances state for dropdown suggestions
   const [customerBalances, setCustomerBalances] = useState<Record<string, number>>({});
+  const [loadingSales, setLoadingSales] = useState(false);
 
   useEffect(() => {
     loadSalesData();
@@ -148,10 +150,13 @@ export default function SalesScreen() {
 
   const loadSalesData = async () => {
     try {
+      setLoadingSales(true);
       const invoicesData = await SaleApiService.getSales();
       setSaleInvoices(invoicesData);
     } catch (error) {
       console.error('Error loading sales data:', error);
+    } finally {
+      setLoadingSales(false);
     }
   };
 
@@ -732,7 +737,12 @@ export default function SalesScreen() {
         {/* Invoices List */}
           <View style={styles.listContainer}>
             <Text style={styles.sectionTitle}>Recent Invoices</Text>
-            {saleInvoices.length > 0 ? (
+            {loadingSales ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Loading Recent Sales...</Text>
+              </View>
+            ) : saleInvoices.length > 0 ? (
               saleInvoices.slice(0, 10).map((invoice, index) => (
                 <TouchableOpacity 
                   key={invoice.id || `sale-invoice-${index}`} 
@@ -1271,5 +1281,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     zIndex: 1,
     position: 'relative',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    marginTop: 16,
   },
 });

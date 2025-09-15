@@ -17,6 +17,7 @@ import {
     TouchableOpacity,
     TouchableWithoutFeedback,
     View,
+    ActivityIndicator,
 } from 'react-native';
 import Modal from 'react-native-modal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -73,6 +74,7 @@ export default function PurchaseScreen() {
   
   // Party balances state for dropdown suggestions
   const [partyBalances, setPartyBalances] = useState<Record<string, number>>({});
+  const [loadingPurchases, setLoadingPurchases] = useState(false);
 
   useEffect(() => {
     loadPurchaseData();
@@ -131,12 +133,15 @@ export default function PurchaseScreen() {
 
   const loadPurchaseData = async () => {
     try {
+      setLoadingPurchases(true);
       const billsData = await PurchaseApiService.getPurchases();
       const paymentsData = await PaymentApiService.getPayments({ type: 'payment-out' });
       
       setPurchaseBills(billsData || []);
     } catch (error) {
       console.error('Error loading purchase data:', error);
+    } finally {
+      setLoadingPurchases(false);
     }
   };
 
@@ -704,7 +709,12 @@ export default function PurchaseScreen() {
         {/* Bills List */}
         <View style={styles.listContainer}>
           <Text style={styles.sectionTitle}>Recent Bills</Text>
-          {purchaseBills.length > 0 ? (
+          {loadingPurchases ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={styles.loadingText}>Loading Recent Purchases...</Text>
+            </View>
+          ) : purchaseBills.length > 0 ? (
             purchaseBills.slice(0, 10).map((bill, index) => (
               <TouchableOpacity 
                 key={bill.id || `purchase-bill-${index}`} 
@@ -1194,5 +1204,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     zIndex: 1,
     position: 'relative',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    marginTop: 16,
   },
 });
