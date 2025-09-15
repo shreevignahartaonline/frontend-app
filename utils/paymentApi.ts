@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = 'http://192.168.29.111:5000';
+const API_BASE_URL = 'https://backend-app-v43g.onrender.com';
 
 // Payment Interface
 export interface Payment {

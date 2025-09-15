@@ -19,7 +19,7 @@ interface WhatsAppSendResponse {
 // Document Service - Thin wrapper around backend
 export class DocumentService {
   // Backend Configuration
-  private static readonly BACKEND_URL = 'http://192.168.29.111:5000'; // Update this to your backend URL
+  private static readonly BACKEND_URL = 'https://backend-app-v43g.onrender.com'; // Update this to your backend URL
 
   // ============================================================================
   // PDF UPLOAD METHODS
