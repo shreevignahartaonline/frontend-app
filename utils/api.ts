@@ -1,5 +1,6 @@
 // API Configuration
 const API_BASE_URL = 'https://backend-app-v43g.onrender.com'; // Update this to your backend URL
+// const API_BASE_URL = 'http://192.168.29.111:5000'
 
 // Company Details Interface
 export interface CompanyDetails {
@@ -186,7 +187,7 @@ async function apiRequest<T>(
   const requestPromise = (async () => {
     try {
       const response = await fetch(url, config);
-      const data: ApiResponse<T> = await response.json();
+      const data = await response.json() as ApiResponse<T>;
 
       if (!response.ok) {
         throw new ApiError(
